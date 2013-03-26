@@ -29,6 +29,7 @@ L.Geocoding = L.Control.extend({
             , 'google' : this._google
             , 'bing' : this._bing
             , 'esri' : this._esri
+            , 'geonames' : this._geonames
             , 'nokia' : this._nokia
             , 'yandex' : this._yandex
             , 'rucadastre' : this._rucadastre
@@ -194,6 +195,33 @@ L.Geocoding = L.Control.extend({
         });
     }
 
+    , _geonames: function(arg) {
+        var that = this
+            , query = arg.query
+            , cb = arg.cb;
+
+        $.ajax({
+            url : 'http://ws.geonames.org/searchJSON'
+            , dataType : 'jsonp'
+            , data : {
+                'q' : query
+                , 'style' : 'full'
+                , 'maxRows' : '1'
+            }
+        })
+        .done(function(data){
+            if (data.geonames.length > 0) {
+                var res=data.geonames[0];
+                cb({
+                    query : query
+                    , content : res.name
+                    , latlng : new L.LatLng(res.lat, res.lng)
+                    , bounds : new L.LatLngBounds([res.bbox.south, res.bbox.west], [res.bbox.north, res.bbox.east])
+                });
+            }
+        });
+    }
+
     , _nokia: function(arg) {
         var that = this
             , query = arg.query
@@ -209,7 +237,7 @@ L.Geocoding = L.Control.extend({
             }
         })
         .done(function(data){
-            if (data.Response.View.length == 0 || data.Response.View[0].Result.length == 0) {
+            if (data.Response.View.length > 0 && data.Response.View[0].Result.length > 0) {
                 var res=data.Response.View[0].Result[0];
                 cb({
                     query : query
