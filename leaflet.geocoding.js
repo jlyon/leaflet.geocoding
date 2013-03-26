@@ -30,6 +30,7 @@ L.Geocoding = L.Control.extend({
             , 'bing' : this._bing
             , 'esri' : this._esri
             , 'geonames' : this._geonames
+            , 'mapquest' : this._mapquest
             , 'nokia' : this._nokia
             , 'yandex' : this._yandex
             , 'rucadastre' : this._rucadastre
@@ -217,6 +218,35 @@ L.Geocoding = L.Control.extend({
                     , content : res.name
                     , latlng : new L.LatLng(res.lat, res.lng)
                     , bounds : new L.LatLngBounds([res.bbox.south, res.bbox.west], [res.bbox.north, res.bbox.east])
+                });
+            }
+        });
+    }
+
+    , _mapquest: function(arg) {
+        var that = this
+            , query = arg.query
+            , cb = arg.cb;
+
+        $.ajax({
+            url : 'http://www.mapquestapi.com/geocoding/v1/address'
+            , dataType : 'jsonp'
+            , data : {
+                'location' : query
+                , 'key' : that.options.apikeys['mapquest']
+                , 'outFormat' : 'json'
+                , 'maxResults' : '1'
+            }
+        })
+        .done(function(data){
+            if (data.results.length > 0 && data.results[0].locations.length > 0) {
+                var res=data.results[0]
+                    , location = res.locations[0].latLng;
+                cb({
+                    query : query
+                    , content : res.providedLocation.location
+                    , latlng : new L.LatLng(location.lat, location.lng)
+                    , bounds : new L.LatLngBounds([location.lat-1, location.lng-1], [location.lat+1, location.lng+1])
                 });
             }
         });
